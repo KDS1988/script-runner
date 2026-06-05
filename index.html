@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="vSporte"/>
+  <meta name="theme-color" content="#0d0d14"/>
+  <title>vSporte Runner</title>
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230d0d14'/><text y='.9em' font-size='80' x='10'>⚡</text></svg>"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    :root {
+      --bg: #0d0d14;
+      --surface: #16161f;
+      --surface2: #1e1e2a;
+      --border: #252535;
+      --accent: #5b7fff;
+      --accent-glow: rgba(91,127,255,0.2);
+      --green: #34d399;
+      --green-glow: rgba(52,211,153,0.15);
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --text: #f0f0f8;
+      --text2: #8888aa;
+      --text3: #44445a;
+      --safe-top: env(safe-area-inset-top, 44px);
+      --safe-bottom: env(safe-area-inset-bottom, 34px);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, sans-serif;
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+    }
+
+    /* ── APP SHELL ── */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      height: 100dvh;
+    }
+
+    /* ── STATUS BAR SPACER ── */
+    .status-bar {
+      height: var(--safe-top);
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    /* ── TOP NAV ── */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 52px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text);
+    }
+
+    .nav-title span { color: var(--accent); }
+
+    .nav-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-glow);
+      border: 1px solid rgba(91,127,255,0.3);
+      border-radius: 20px;
+      padding: 3px 10px;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── PAGES ── */
+    .pages {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 20px 16px;
+      padding-bottom: calc(80px + var(--safe-bottom));
+      display: none;
+    }
+
+    .page.active { display: block; }
+
+    /* ── TAB BAR ── */
+    .tabbar {
+      display: flex;
+      align-items: stretch;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding-bottom: var(--safe-bottom);
+      flex-shrink: 0;
+    }
+
+    .tab {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 10px 0;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      position: relative;
+    }
+
+    .tab:active { opacity: 0.6; }
+
+    .tab-icon {
+      font-size: 22px;
+      line-height: 1;
+      transition: transform 0.2s;
+    }
+
+    .tab.active .tab-icon { transform: scale(1.1); }
+
+    .tab-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text2);
+      letter-spacing: 0.2px;
+      transition: color 0.2s;
+    }
+
+    .tab.active .tab-label { color: var(--accent); }
+
+    .tab-dot {
+      position: absolute;
+      top: 8px;
+      right: calc(50% - 18px);
+      width: 7px;
+      height: 7px;
+      background: var(--red);
+      border-radius: 50%;
+      display: none;
+    }
+
+    .tab-dot.show { display: block; }
+
+    /* ══════════════════════════════
+       PAGE: ЗАПУСК
+    ══════════════════════════════ */
+
+    .run-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 0 28px;
+      gap: 8px;
+    }
+
+    .run-status-ring {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      position: relative;
+      transition: all 0.3s;
+      margin-bottom: 8px;
+    }
+
+    .run-status-ring.running {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 8px var(--accent-glow);
+      animation: ring-pulse 1.5s ease infinite;
+    }
+
+    .run-status-ring.success {
+      border-color: var(--green);
+      box-shadow: 0 0 0 8px var(--green-glow);
+    }
+
+    .run-status-ring.error {
+      border-color: var(--red);
+      box-shadow: 0 0 0 8px rgba(248,113,113,0.15);
+    }
+
+    @keyframes ring-pulse {
+      0%, 100% { box-shadow: 0 0 0 8px var(--accent-glow); }
+      50% { box-shadow: 0 0 0 20px transparent; }
+    }
+
+    .run-status-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text2);
+    }
+
+    .run-status-text.running { color: var(--accent); }
+    .run-status-text.success { color: var(--green); }
+    .run-status-text.error { color: var(--red); }
+
+    .run-last {
+      font-size: 12px;
+      color: var(--text3);
+    }
+
+    /* BIG RUN BUTTON */
+    .btn-run-big {
+      width: 100%;
+      height: 64px;
+      border-radius: 16px;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 20px rgba(91,127,255,0.35);
+      margin-bottom: 16px;
+    }
+
+    .btn-run-big:active:not(:disabled) {
+      transform: scale(0.97);
+      opacity: 0.85;
+    }
+
+    .btn-run-big:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* INFO CARDS */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .info-card-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text2);
+      letter-spacing: 0.3px;
+      margin-bottom: 6px;
+    }
+
+    .info-card-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .info-card-value.green { color: var(--green); }
+    .info-card-value.red { color: var(--red); }
+
+    .info-card-sub {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 2px;
+    }
+
+    /* SCRIPT INFO */
+    .script-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .script-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--accent-glow);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .script-info { flex: 1; min-width: 0; }
+
+    .script-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .script-desc {
+      font-size: 12px;
+      color: var(--text2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .script-status {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      box-shadow: 0 0 6px var(--green);
+    }
+
+    /* ══════════════════════════════
+       PAGE: ИСТОРИЯ
+    ══════════════════════════════ */
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .btn-clear {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--red);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
+    .history-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text3);
+      font-size: 14px;
+    }
+
+    .history-empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: slideIn 0.25s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .history-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .history-dot.ok { background: var(--green); }
+    .history-dot.err { background: var(--red); }
+
+    .history-body { flex: 1; min-width: 0; }
+
+    .history-msg {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .history-msg.err { color: var(--red); }
+
+    .history-time {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .history-ms {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════
+       PAGE: РАСПИСАНИЕ
+    ══════════════════════════════ */
+
+    .schedule-info {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.6;
+    }
+
+    .schedule-info strong { color: var(--text); }
+
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .schedule-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .schedule-item.active-item {
+      border-color: rgba(91,127,255,0.4);
+      background: rgba(91,127,255,0.05);
+    }
+
+    .schedule-time-badge {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 8px 12px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .schedule-item.active-item .schedule-time-badge {
+      background: var(--accent-glow);
+    }
+
+    .schedule-time {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+
+    .schedule-item.active-item .schedule-time { color: var(--accent); }
+
+    .schedule-days {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text3);
+      letter-spacing: 0.2px;
+    }
+
+    .schedule-body { flex: 1; }
+
+    .schedule-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .schedule-next {
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    .schedule-toggle {
+      width: 48px;
+      height: 28px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .schedule-toggle.on { background: var(--accent); }
+    .schedule-toggle.off { background: var(--border); }
+
+    .schedule-toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      transition: left 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    .schedule-toggle.on::after { left: 23px; }
+    .schedule-toggle.off::after { left: 3px; }
+
+    .btn-add-schedule {
+      width: 100%;
+      height: 52px;
+      border-radius: 14px;
+      border: 1.5px dashed var(--border);
+      background: none;
+      color: var(--text2);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s;
+    }
+
+    .btn-add-schedule:active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      display: flex;
+      align-items: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      width: 100%;
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      padding: 0 20px 0;
+      padding-bottom: calc(20px + var(--safe-bottom));
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .modal-backdrop.open .modal {
+      transform: none;
+    }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 12px auto 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      letter-spacing: -0.3px;
+    }
+
+    .form-field {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      letter-spacing: 0.3px;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus { border-color: var(--accent); }
+
+    .days-picker {
+      display: flex;
+      gap: 8px;
+    }
+
+    .day-btn {
+      flex: 1;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text2);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .day-btn.selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn-save {
+      width: 100%;
+      height: 54px;
+      border-radius: 14px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.15s;
+    }
+
+    .btn-save:active { opacity: 0.8; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed;
+      top: calc(var(--safe-top) + 60px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 200;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* scrollbar hide */
+    .page::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <div class="status-bar"></div>
+
+  <nav class="nav">
+    <div class="nav-title">v<span>Sporte</span> Runner</div>
+    <div class="nav-badge" id="nav-badge">ГОТОВ</div>
+  </nav>
+
+  <div class="pages">
+
+    <!-- ── PAGE: ЗАПУСК ── -->
+    <div class="page active" id="page-run">
+
+      <div class="run-hero">
+        <div class="run-status-ring" id="status-ring">⚡</div>
+        <div class="run-status-text" id="status-text">Готов к запуску</div>
+        <div class="run-last" id="last-run-text">Ещё не запускался</div>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="info-card-label">УСПЕШНЫХ</div>
+          <div class="info-card-value green" id="stat-ok">0</div>
+          <div class="info-card-sub">запусков</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-label">ОШИБОК</div>
+          <div class="info-card-value red" id="stat-err">0</div>
+          <div class="info-card-sub">запусков</div>
+        </div>
+      </div>
+
+      <button class="btn-run-big" id="run-btn" onclick="runScript()">
+        <div class="btn-spinner" id="spinner"></div>
+        <span id="btn-text">▶ Запустить скрипт</span>
+      </button>
+
+      <div class="script-card">
+        <div class="script-icon">📊</div>
+        <div class="script-info">
+          <div class="script-name">vsporte_data</div>
+          <div class="script-desc">ВНОСИТЬ СЮДА!!! → РАСПИСАНИЕ</div>
+        </div>
+        <div class="script-status"></div>
+      </div>
+
+    </div>
+
+    <!-- ── PAGE: ИСТОРИЯ ── -->
+    <div class="page" id="page-history">
+      <div class="section-header">
+        <div class="section-title">История</div>
+        <button class="btn-clear" onclick="clearHistory()">Очистить</button>
+      </div>
+      <div id="history-container">
+        <div class="history-empty">
+          <div class="history-empty-icon">📋</div>
+          Здесь появится история запусков
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: РАСПИСАНИЕ ── -->
+    <div class="page" id="page-schedule">
+      <div class="section-header">
+        <div class="section-title">Расписание</div>
+      </div>
+
+      <div class="schedule-info">
+        <strong>Автозапуск</strong> — скрипт будет запускаться автоматически в указанное время, пока приложение открыто в браузере.
+      </div>
+
+      <div class="schedule-list" id="schedule-list"></div>
+
+      <button class="btn-add-schedule" onclick="openModal()">
+        <span>＋</span> Добавить время запуска
+      </button>
+    </div>
+
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tabbar">
+    <div class="tab active" id="tab-run" onclick="switchTab('run')">
+      <div class="tab-icon">⚡</div>
+      <div class="tab-label">Запуск</div>
+    </div>
+    <div class="tab" id="tab-history" onclick="switchTab('history')">
+      <div class="tab-icon">📋</div>
+      <div class="tab-label">История</div>
+      <div class="tab-dot" id="history-dot"></div>
+    </div>
+    <div class="tab" id="tab-schedule" onclick="switchTab('schedule')">
+      <div class="tab-icon">🕐</div>
+      <div class="tab-label">Расписание</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Добавить расписание -->
+<div class="modal-backdrop" id="modal" onclick="handleBackdropClick(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Новый запуск по расписанию</div>
+
+    <div class="form-field">
+      <div class="form-label">ВРЕМЯ</div>
+      <input type="time" class="form-input" id="sched-time" value="09:00"/>
+    </div>
+
+    <div class="form-field">
+      <div class="form-label">ДНИ НЕДЕЛИ</div>
+      <div class="days-picker">
+        <button class="day-btn selected" data-day="1">Пн</button>
+        <button class="day-btn selected" data-day="2">Вт</button>
+        <button class="day-btn selected" data-day="3">Ср</button>
+        <button class="day-btn selected" data-day="4">Чт</button>
+        <button class="day-btn selected" data-day="5">Пт</button>
+        <button class="day-btn" data-day="6">Сб</button>
+        <button class="day-btn" data-day="0">Вс</button>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <div class="form-label">НАЗВАНИЕ (необязательно)</div>
+      <input type="text" class="form-input" id="sched-name" placeholder="Утренний запуск"/>
+    </div>
+
+    <button class="btn-save" onclick="saveSchedule()">Сохранить</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw24ghMybcnH_EwdODs064w0nsoQpXpYig6qTQ58TubqvrSAy_6thD-juybVNknv1CD/exec';
+
+// ── STATE ──
+let state = {
+  history: [],
+  schedules: [],
+  stats: { ok: 0, err: 0 },
+  lastRun: null,
+  isRunning: false
+};
+
+// ── LOAD ──
+function loadState() {
+  try {
+    const s = localStorage.getItem('vsporte_state');
+    if (s) state = { ...state, ...JSON.parse(s) };
+  } catch {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('vsporte_state', JSON.stringify(state));
+  } catch {}
+}
+
+loadState();
+renderAll();
+initScheduleTimers();
+
+// ── TABS ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('page-' + tab).classList.add('active');
+  if (tab === 'history') {
+    document.getElementById('history-dot').classList.remove('show');
+  }
+}
+
+// ── RUN SCRIPT ──
+async function runScript(fromSchedule = false) {
+  if (state.isRunning) return;
+  state.isRunning = true;
+
+  const btn = document.getElementById('run-btn');
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('btn-text');
+  const ring = document.getElementById('status-ring');
+  const statusText = document.getElementById('status-text');
+  const badge = document.getElementById('nav-badge');
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'Выполняется...';
+  ring.className = 'run-status-ring running';
+  ring.textContent = '⚡';
+  statusText.className = 'run-status-text running';
+  statusText.textContent = 'Выполняется...';
+  badge.textContent = 'ЗАПУСК';
+
+  const start = Date.now();
+
+  try {
+    await fetch(SCRIPT_URL, { method: 'GET', mode: 'no-cors' });
+    const ms = Date.now() - start;
+
+    // Success
+    state.stats.ok++;
+    state.lastRun = new Date().toISOString();
+    addHistory({ ok: true, ms, time: state.lastRun, source: fromSchedule ? 'auto' : 'manual' });
+
+    ring.className = 'run-status-ring success';
+    ring.textContent = '✓';
+    statusText.className = 'run-status-text success';
+    statusText.textContent = 'Выполнено успешно';
+    badge.textContent = 'ОК';
+    showToast('✓ Скрипт выполнен');
+
+    setTimeout(() => {
+      ring.className = 'run-status-ring';
+      ring.textContent = '⚡';
+      statusText.className = 'run-status-text';
+      statusText.textContent = 'Готов к запуску';
+      badge.textContent = 'ГОТОВ';
+    }, 3000);
+
+  } catch (err) {
+    const ms = Date.now() - start;
+    state.stats.err++;
+    addHistory({ ok: false, ms, time: new Date().toISOString(), msg: err.message, source: fromSchedule ? 'auto' : 'manual' });
+
+    ring.className = 'run-status-ring error';
+    ring.textContent = '✕';
+    statusText.className = 'run-status-text error';
+    statusText.textContent = 'Ошибка сети';
+    badge.textContent = 'ОШИБКА';
+    showToast('✕ Ошибка запуска');
+
+    setTimeout(() => {
+      ring.className = 'run-status-ring';
+      ring.textContent = '⚡';
+      statusText.className = 'run-status-text';
+      statusText.textContent = 'Готов к запуску';
+      badge.textContent = 'ГОТОВ';
+    }, 3000);
+  }
+
+  btn.disabled = false;
+  spinner.style.display = 'none';
+  btnText.textContent = '▶ Запустить скрипт';
+  state.isRunning = false;
+
+  updateStats();
+  updateLastRun();
+  saveState();
+}
+
+function addHistory(entry) {
+  state.history.unshift(entry);
+  if (state.history.length > 100) state.history = state.history.slice(0, 100);
+  renderHistory();
+  // Show dot if not on history tab
+  if (!document.getElementById('page-history').classList.contains('active')) {
+    document.getElementById('history-dot').classList.add('show');
+  }
+}
+
+// ── RENDER ──
+function renderAll() {
+  updateStats();
+  updateLastRun();
+  renderHistory();
+  renderSchedules();
+}
+
+function updateStats() {
+  document.getElementById('stat-ok').textContent = state.stats.ok;
+  document.getElementById('stat-err').textContent = state.stats.err;
+}
+
+function updateLastRun() {
+  const el = document.getElementById('last-run-text');
+  if (!state.lastRun) {
+    el.textContent = 'Ещё не запускался';
+  } else {
+    const d = new Date(state.lastRun);
+    el.textContent = 'Последний: ' + d.toLocaleString('ru', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  }
+}
+
+function renderHistory() {
+  const container = document.getElementById('history-container');
+  if (!state.history.length) {
+    container.innerHTML = `<div class="history-empty"><div class="history-empty-icon">📋</div>Здесь появится история запусков</div>`;
+    return;
+  }
+  const html = state.history.map(h => {
+    const d = new Date(h.time);
+    const timeStr = d.toLocaleString('ru', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const source = h.source === 'auto' ? ' · авто' : ' · вручную';
+    return `
+      <div class="history-item">
+        <div class="history-dot ${h.ok ? 'ok' : 'err'}"></div>
+        <div class="history-body">
+          <div class="history-msg ${h.ok ? '' : 'err'}">${h.ok ? 'Выполнено успешно' : ('Ошибка: ' + (h.msg || 'сеть'))}</div>
+          <div class="history-time">${timeStr}${source}</div>
+        </div>
+        <div class="history-ms">${h.ms}мс</div>
+      </div>`;
+  }).join('');
+  container.innerHTML = `<div class="history-list">${html}</div>`;
+}
+
+function clearHistory() {
+  if (!state.history.length) return;
+  state.history = [];
+  state.stats = { ok: 0, err: 0 };
+  saveState();
+  renderAll();
+  showToast('История очищена');
+}
+
+// ── SCHEDULE ──
+let scheduleTimers = {};
+
+function renderSchedules() {
+  const list = document.getElementById('schedule-list');
+  if (!state.schedules.length) {
+    list.innerHTML = '';
+    return;
+  }
+  const dayNames = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+  list.innerHTML = state.schedules.map((s, i) => {
+    const daysStr = s.days.map(d => dayNames[d]).join(', ');
+    const nextStr = getNextRunStr(s);
+    return `
+      <div class="schedule-item ${s.enabled ? 'active-item' : ''}">
+        <div class="schedule-time-badge">
+          <div class="schedule-time">${s.time}</div>
+          <div class="schedule-days">${daysStr}</div>
+        </div>
+        <div class="schedule-body">
+          <div class="schedule-name">${s.name || 'Автозапуск'}</div>
+          <div class="schedule-next">${s.enabled ? nextStr : 'Отключено'}</div>
+        </div>
+        <button class="schedule-toggle ${s.enabled ? 'on' : 'off'}" onclick="toggleSchedule(${i})"></button>
+      </div>`;
+  }).join('');
+}
+
+function getNextRunStr(s) {
+  if (!s.enabled || !s.days.length) return 'Нет дней';
+  const now = new Date();
+  const [h, m] = s.time.split(':').map(Number);
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() + i);
+    d.setHours(h, m, 0, 0);
+    if (d > now && s.days.includes(d.getDay())) {
+      if (i === 0) return 'Сегодня в ' + s.time;
+      if (i === 1) return 'Завтра в ' + s.time;
+      const dayName = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'][d.getDay()];
+      return 'В ' + dayName + ' в ' + s.time;
+    }
+  }
+  return 'Скоро';
+}
+
+function initScheduleTimers() {
+  // Clear old
+  Object.values(scheduleTimers).forEach(t => clearInterval(t));
+  scheduleTimers = {};
+
+  // Check every minute
+  scheduleTimers.main = setInterval(checkSchedules, 30000);
+  checkSchedules();
+}
+
+function checkSchedules() {
+  const now = new Date();
+  const hhmm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  state.schedules.forEach(s => {
+    if (!s.enabled) return;
+    if (s.time !== hhmm) return;
+    if (!s.days.includes(now.getDay())) return;
+    // Avoid double fire in same minute
+    const key = s.id + '_' + hhmm + '_' + now.toDateString();
+    if (localStorage.getItem('fired_' + key)) return;
+    localStorage.setItem('fired_' + key, '1');
+    showToast('🕐 Автозапуск: ' + (s.name || 'расписание'));
+    runScript(true);
+  });
+}
+
+function toggleSchedule(i) {
+  state.schedules[i].enabled = !state.schedules[i].enabled;
+  saveState();
+  renderSchedules();
+}
+
+// ── MODAL ──
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  // Reset form
+  document.getElementById('sched-time').value = '09:00';
+  document.getElementById('sched-name').value = '';
+  document.querySelectorAll('.day-btn').forEach(b => {
+    const d = parseInt(b.dataset.day);
+    b.classList.toggle('selected', d >= 1 && d <= 5);
+  });
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function handleBackdropClick(e) {
+  if (e.target === document.getElementById('modal')) closeModal();
+}
+
+function saveSchedule() {
+  const time = document.getElementById('sched-time').value;
+  const name = document.getElementById('sched-name').value.trim();
+  const days = [...document.querySelectorAll('.day-btn.selected')].map(b => parseInt(b.dataset.day));
+
+  if (!days.length) { showToast('Выберите хотя бы один день'); return; }
+
+  state.schedules.push({
+    id: Date.now(),
+    time,
+    name,
+    days,
+    enabled: true
+  });
+
+  saveState();
+  renderSchedules();
+  closeModal();
+  showToast('✓ Расписание добавлено');
+  initScheduleTimers();
+}
+
+// Day picker toggle
+document.querySelectorAll('.day-btn').forEach(btn => {
+  btn.addEventListener('click', () => btn.classList.toggle('selected'));
+});
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
